@@ -337,7 +337,7 @@ namespace SwayNotificationCenter {
 
             // Changes the swipe direction depending on the notifications X position
             switch (ConfigModel.instance.positionX) {
-                case PositionX.LEFT :
+                case PositionX.LEFT:
                     dismissible_widget.set_gesture_direction (SwipeDirection.SWIPE_LEFT);
                     break;
                 default:

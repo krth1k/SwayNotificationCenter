@@ -93,6 +93,8 @@ namespace SwayNotificationCenter {
         private static Regex img_tag_regex;
         private static Regex link_open_tag_regex;
         private static Regex link_close_tag_regex;
+        private static Regex plain_url_regex;
+        private static Regex plain_domain_regex;
         private const MarkupParser MARKUP_PARSER = {
             validate_markup_start, null, null, null, null
         };
@@ -150,6 +152,21 @@ namespace SwayNotificationCenter {
                     "<a(?:\\s+(?:href|title|class)\\s*=\\s*" +
                     "(?:\"[^\"]*\"|'[^']*'))+\\s*>");
                 link_close_tag_regex = new Regex ("</a\\s*>");
+                plain_url_regex = new Regex (
+                    "<a\\b[^>]*>.*?</a\\s*>(*SKIP)(*F)|" +
+                    "<[^>]+>(*SKIP)(*F)|" +
+                    "(https?://[^\\s<>\"']*[^\\s<>\"'.,!?;:])",
+                    RegexCompileFlags.DOTALL);
+                plain_domain_regex = new Regex (
+                    "<a\\b[^>]*>.*?</a\\s*>(*SKIP)(*F)|" +
+                    "<[^>]+>(*SKIP)(*F)|" +
+                    "(?<![@\\w./:-])" +
+                    "((?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}" +
+                    "[A-Za-z0-9])?\\.)+" +
+                    "[A-Za-z]{2,63}(?![A-Za-z0-9_-])" +
+                    "(?!\\.[A-Za-z0-9-])(?::\\d{1,5})?" +
+                    "(?:[/?#][^\\s<>\"']*[^\\s<>\"'.,!?;:]|/)?)",
+                    RegexCompileFlags.DOTALL);
             } catch (Error e) {
                 warning ("Invalid regex: %s", e.message);
             }
@@ -449,6 +466,11 @@ namespace SwayNotificationCenter {
                         pango_markup, pango_markup.length, 0, "</span>");
                     Pango.parse_markup (
                         pango_markup, -1, 0, out attr, out buf, null);
+                    markup = plain_url_regex.replace (
+                        text, text.length, 0, "<a href=\"\\1\">\\1</a>");
+                    markup = plain_domain_regex.replace (
+                        markup, markup.length, 0,
+                        "<a href=\"https://\\1\">\\1</a>");
                 } catch (Error e) {
                     // Default to hack if the initial markup couldn't be parsed
 
